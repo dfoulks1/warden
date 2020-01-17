@@ -1,0 +1,118 @@
+#!/bin/bash
+
+JAILHOUSE="/home/dfoulks/jailhouse"
+helpme="
+$0
+manages an organization of chroot jails located in configurable: JAILHOUSE.
+Currently: $JAILHOUSE
+
+Usage:
+	warden lockup <jailname> 	-- create a chroot jail in $JAILHOUSE/<jailname>
+	
+	warden visit <jailname> 	-- chroot to the jail name.
+	      - on the first visit 
+		source the reform.sh 
+		file.
+	
+	warden release <jailname> 	-- umount and remove jail in $JAILHOUSE/<jailname>
+	
+	warden roster 			-- list all of the current jails
+
+	warden reform			-- source an activation script"
+
+[ -z "$1" ] && echo "$helpme" && exit 0 
+action=$1
+shift
+jailcell="$JAILHOUSE/$1"
+shift
+order=$@
+
+
+function lockemup() {
+	[ -d $jailcell ] && letemgo
+
+	mkdir $jailcell
+
+	sudo $(which debootstrap) --variant buildd --arch amd64 disco $jailcell http://archive.ubuntu.com/ubuntu
+
+	echo 'pkgs="ruby-full build-essential zlib1g-dev python3 wget curl vim python3-pip git"
+	gems="jekyll bundler"
+	pips="pelican beautifulsoup4 flock"
+
+	echo "deb http://us.archive.ubuntu.com/ubuntu/ disco universe" >> /etc/apt/sources.list
+	apt-get update
+
+	function get_rvm(){
+			curl -L https://get.rvm.io | bash -s stable --ruby
+			mount -t proc proc proc/
+		}
+
+	function get_pkgs() { for pkg in $pkgs; do apt install $pkg -y; done }
+
+	function get_pips() { for pip in ${pips[@]}; do pip3 install $pip; done }
+
+	function get_gems(){ for gem in ${gems[@]}; do gem install $gem; done }
+	 
+
+	get_pkgs
+	get_pips
+	get_rvm
+	get_gems
+	source /usr/local/rvm/scripts/rvm' >> $jailcell/reform.sh
+
+	sudo chroot $jailcell bash reform.sh
+	sudo cp -p /home/dfoulks/asf/infrastructure-p6/modules/jekyll_asf/files/jekyll-build.py $jailcell/usr/local/bin/
+}
+
+
+letemgo() {
+	if [ check_jailhouse ]; then
+		sudo umount $jailcell/proc
+		sudo rm -rf $jailcell 
+	fi
+}
+
+
+visitjail() {
+	if [ check_jailhouse ]; then	
+		sudo chroot $jailcell
+	fi
+}
+
+roster() {
+	if [ -z "$(ls $JAILHOUSE)" ]; then
+		echo "$JAILHOUSE is empty"
+	else
+		echo `ls $JAILHOUSE`
+	fi
+}
+
+
+check_jailhouse() {
+	if [ -d $jailcell ]; then
+		return true
+	else
+		return false
+	fi
+}
+
+case "$action" in
+	lockup)
+		lockemup
+		;;
+	release)
+		letemgo
+		;;
+	roster)
+		roster
+		;;
+	visit)
+		visitjail 
+		;;
+	order)
+		sudo chroot $jailcell $order
+		;;
+	--help|help|*)
+		echo "$helpme"
+		;;
+esac
