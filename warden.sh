@@ -33,35 +33,8 @@ function lockemup() {
 
 	mkdir $jailcell
 
-	sudo $(which debootstrap) --variant buildd --arch amd64 disco $jailcell http://archive.ubuntu.com/ubuntu
-
-	echo 'pkgs="ruby-full build-essential zlib1g-dev python3 wget curl vim python3-pip git"
-	gems="jekyll bundler"
-	pips="pelican beautifulsoup4 flock"
-
-	echo "deb http://us.archive.ubuntu.com/ubuntu/ disco universe" >> /etc/apt/sources.list
-	apt-get update
-
-	function get_rvm(){
-			curl -L https://get.rvm.io | bash -s stable --ruby
-			mount -t proc proc proc/
-		}
-
-	function get_pkgs() { for pkg in $pkgs; do apt install $pkg -y; done }
-
-	function get_pips() { for pip in ${pips[@]}; do pip3 install $pip; done }
-
-	function get_gems(){ for gem in ${gems[@]}; do gem install $gem; done }
-	 
-
-	get_pkgs
-	get_pips
-	get_rvm
-	get_gems
-	source /usr/local/rvm/scripts/rvm' >> $jailcell/reform.sh
-
-	sudo chroot $jailcell bash reform.sh
-	sudo cp -p /home/dfoulks/asf/infrastructure-p6/modules/jekyll_asf/files/jekyll-build.py $jailcell/usr/local/bin/
+	$(which debootstrap) --variant buildd --arch amd64 --include=build-essential,python3,curl,wget,systemd,git,net-tools --components=main,universe disco $jailcell http://archive.ubuntu.com/ubuntu
+        systemd-nspawn -D $jailcell -M disco
 }
 
 

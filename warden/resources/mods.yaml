@@ -1,0 +1,8 @@
+pelican:
+  - pkgs="python3 python3-pip"; for pkg in ${pkgs[@]}; do apt install $pkg -y; done
+  - pips="pelican beautifulsoup4 flock"; for pip in ${pips[@]}; do pip3 install $pip; done
+jekyll:
+  - pkgs="ruby-full build-essential zlib1g-dev"; for pkg in ${pkgs[@]}; do apt install $pkg -y; done
+  - curl -L https://get.rvm.io | bash -s stable --ruby
+  - gems="jekyll bundler"; for gem in ${gems[@]}; do gem install $gem; done
+  - echo "source /usr/local/rvm/scripts/rvm" >> /etc/bash.bashrc
