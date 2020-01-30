@@ -4,8 +4,8 @@ import sys
 import argparse
 import os
 import yaml
-import config
-import jailer.jail as jail
+import pydebootstrap
+import pynspawn
 
 def readYaml(profile):
     with open(profile, 'r') as ydata_file:
@@ -14,16 +14,16 @@ def readYaml(profile):
             return ydata
         except yaml.YAMLError as e:
             print(e)
+
+
 def main():
-
-
-    parser = argparse.ArgumentParser('Manage chroot environments')
+    parser = argparse.ArgumentParser('Create and Manage SystemD Jails')
     parser.add_argument('-n',
                         '--name',
                         help='Name of the chroot jail'
                         )
-    parser.add_argument('-j',
-                        '--jail',
+    parser.add_argument('-c',
+                        '--create',
                         action='store_true',
                         help='Create a new Jail'
                         )
@@ -45,10 +45,6 @@ def main():
                         '--order',
                         help='Send comand or script to jail'
                         )
-    parser.add_argument('-v',
-                        '--verbose',
-                        help='Print messages'
-                        )
     parser.add_argument('-l',
                         '--list',
                         action='store_true',
@@ -56,40 +52,25 @@ def main():
                         )
     args = parser.parse_args()
     
-    jailhouse = config.jail
-    osdata = readYaml("resources/os.yaml")
-    moddata = readYaml("resources/mods.yaml")
     if args.list:
-        jail.list(jailhouse)
+        pydebootstrap.list()
         sys.exit(0)
     elif args.release and args.name:
-        jail.release(args, jailhouse)
+        pydebootstrap.release(args.name)
         sys.exit(0)
     elif args.order and args.name:
-        jail.order(args, jailhouse, args.order) 
+        pynspawn.order(args.name, args.command) 
         sys.exit(0)
-    
-    if not args.profile:
-        print("No profile provided, exiting...")
-        sys.exit(1)
-
-    profile = readYaml(args.profile)
-    conf = osdata[profile['os']]
-
-    if args.jail and args.name:
-        jail.create(args, jailhouse, conf['conf'])
+    elif args.daemonize and args.name:
+        pynspawn.daemonize(args.name)
+        sys.exit(0)
+    elif args.create and args.profile:
+        profile = readYaml(args.profile)
+        pydebootstrap.create(profile['conf'])
         if args.daemonize:
-            jail.daemonize(args, jailhouse)
-#        if len(profile['modules']) > 0:
-#            for module in profile['modules']:
-#                for command in moddata[module]:
-#                    jail.order(args, jailhouse, command)
-
+            pynspawn.daemonize(profile['conf']['name'])
     else:
-        print('Error: Insufficient Information Provided')
-        print(parser.print_help())
-        print('\nJail, Release, and Deputize functions require a Name')
-        print('\nList does not require a name')
+        print("no actionable argument passed.")
         sys.exit(0)
 
 if __name__ == "__main__":

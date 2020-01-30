@@ -1,1 +1,0 @@
-jail = "/var/lib/machines/"

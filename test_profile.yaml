@@ -1,0 +1,7 @@
+conf:
+  os: 'bionic'
+  arch: 'amd64'
+  components: 'main,universe'
+  includes: 'build-essential,python3,curl,wget,systemd,git,net-tools,systemd-sysv,dbus,vim'
+  source: 'http://archive.ubuntu.com/ubuntu'
+  name: 'bionic'

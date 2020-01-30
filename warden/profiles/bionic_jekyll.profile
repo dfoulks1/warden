@@ -1,3 +1,0 @@
-os: bionic
-modules:
-  - jekyll
