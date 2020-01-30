@@ -29,27 +29,6 @@ def create(conf):
     except subprocess.CalledProcessError as e:
         print(e)
 
-    try:
-        subprocess.check_call(['systemd-nspawn', '--timezone', 'off', '-M', conf['name'], '/bin/echo', 'root:password', '|', '/usr/sbin/chpasswd'])
-    except subprocess.CalledProcessError as e:
-        print(e)
-
-
-def order(name, cmd):
-    try:
-        command = ['systemd-nspawn', '--timezone', 'off', '-M', name]
-        command.extend(cmd.split(' '))
-        subprocess.check_call(command)
-    except subprocess.CalledProcessError as e:
-        print(e)
-
-        
-def daemonize(name):
-    try:    
-        subprocess.check_call(['systemctl', 'enable', 'systemd-nspawn@' + args.name + '.service'])
-    except subprocess.CalledProcessError as e:
-        print(e)
-
 
 def release(name):
     """ machinectl terminate the environment if it exists, and remove the debootstrapped directory"""
