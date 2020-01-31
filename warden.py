@@ -59,7 +59,7 @@ def main():
         pydebootstrap.release(args.name)
         sys.exit(0)
     elif args.order and args.name:
-        pynspawn.order(args.name, args.command) 
+        pynspawn.order(args.name, args.order) 
         sys.exit(0)
     elif args.daemonize and args.name:
         pynspawn.daemonize(args.name)
